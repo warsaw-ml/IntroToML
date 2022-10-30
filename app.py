@@ -22,6 +22,7 @@ run = st.checkbox('Run')
 FRAME_WINDOW = st.image([])
 camera = cv2.VideoCapture(0)
 
+# loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
 
 while run:
@@ -39,5 +40,6 @@ while run:
     # show the final image
     FRAME_WINDOW.image(frame)
 else:
+    # if app is not working - display screensaver
     st_lottie(lottie_coding, height=400)
-    st.title('App stopped - click "Run" to start')
+    st.markdown("<h1 style='text-align: center; color: grey;'>App is turned off</h1>", unsafe_allow_html=True)
