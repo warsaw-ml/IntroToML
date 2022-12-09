@@ -14,17 +14,17 @@ class FaceAgeDataset(torch.utils.data.Dataset):
         self.data_dir = data_dir
         self.dataset_dir = os.path.join(self.data_dir, "UTKFace")
         self.img_dir = os.path.join(self.dataset_dir, "images")
-        
+
         self.images = None
         self.labels = None
-        
-        self.transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize(size=(100,100))])
-        
+
+        self.transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize(size=(100, 100))])
+
         self.load_data()
 
         self.mean = torch.mean(self.images)
         self.std = torch.std(self.images)
-    
+
     def load_data(self):
         # load data from torch saves if it was already processed
         images_tensor_path = os.path.join(self.dataset_dir, "images.pt")
@@ -33,7 +33,7 @@ class FaceAgeDataset(torch.utils.data.Dataset):
             self.images = torch.load(images_tensor_path)
             self.labels = torch.load(labels_tensor_path)
             return
-            
+
         # read filenames and ages from folder
         paths = []
         ages = []
@@ -41,17 +41,19 @@ class FaceAgeDataset(torch.utils.data.Dataset):
             if filename.split(".")[-1] == "jpg":
                 paths.append(os.path.join(self.img_dir, filename))
                 ages.append(int(filename.split("_")[0]))
-        
+
         # load images
         images = [Image.open(path) for path in tqdm(paths, desc="Loading images...")]
-        
+
         # convert to tensors
         images = torch.stack([self.transforms(img) for img in tqdm(images, desc="Converting images to tensors...")])
-        labels = torch.stack([torch.tensor([age], dtype=torch.long) for age in tqdm(ages, desc="Converting labels to tensors...")])
-        
+        labels = torch.stack(
+            [torch.tensor([age], dtype=torch.long) for age in tqdm(ages, desc="Converting labels to tensors...")]
+        )
+
         self.images = images
         self.labels = labels
-        
+
         # save tensors
         torch.save(self.images, images_tensor_path)
         torch.save(self.labels, labels_tensor_path)
@@ -64,19 +66,18 @@ class FaceAgeDataset(torch.utils.data.Dataset):
 
 
 class FaceAgeDataModule(LightningDataModule):
-
     def __init__(
         self,
         data_dir: str = "data/",
-        train_val_test_split: Tuple[int, int, int] = (19708, 2_000, 2_000),
-        batch_size: int = 64,
+        train_val_test_split: Tuple[int, int, int] = (20708, 2990, 10),
+        batch_size: int = 32,
         num_workers: int = 0,
         pin_memory: bool = False,
     ):
         super().__init__()
 
         self.save_hyperparameters()
-        
+
         self.mean = 0.4810
         self.std = 0.2544
 
@@ -123,10 +124,10 @@ class FaceAgeDataModule(LightningDataModule):
             shuffle=False,
         )
 
+
 if __name__ == "__main__":
     dm = FaceAgeDataModule()
     dm.setup()
     for i in dm.train_dataloader():
         print(i[0].shape, i[1].shape)
         break
-    

@@ -149,3 +149,5 @@ data/
 logs/
 .env
 .DS_Store
+checkpoints/
+lightning_logs/
