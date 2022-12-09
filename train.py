@@ -1,5 +1,11 @@
-import pytorch_lightning as pl
+from typing import Any, List
 from face_age_datamodule import FaceAgeDataModule
+import torch
+import pytorch_lightning as pl
+from pytorch_lightning import LightningModule
+from torchmetrics import MinMetric, MeanMetric
+from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics import MeanAbsoluteError as MAE
 
 from typing import Any, List
 
@@ -71,7 +77,6 @@ class LitModel(pl.LightningModule):
     def model_step(self, batch: Any):
         x, y = batch
         preds = self.forward(x)
-        # preds = preds * 90 + 1
         loss = self.criterion(preds, y)
         return loss, preds, y
 
@@ -83,7 +88,10 @@ class LitModel(pl.LightningModule):
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/mae", self.train_mae, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss}
+        # we can return here dict with any tensors
+        # and then read it in some callback or in `training_epoch_end()` below
+        # remember to always return loss from `training_step()` or backpropagation will fail!
+        return {"loss": loss, "preds": preds, "targets": targets}
 
     def training_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
@@ -92,12 +100,13 @@ class LitModel(pl.LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
+        # update and log metrics
         self.val_loss(loss)
         self.val_mae(preds, targets)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/mae", self.val_mae, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss}
+        return {"loss": loss, "preds": preds, "targets": targets}
 
     def validation_epoch_end(self, outputs: List[Any]):
         mae = self.val_mae.compute()  # get current val mae
@@ -109,12 +118,13 @@ class LitModel(pl.LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
+        # update and log metrics
         self.test_loss(loss)
         self.test_mae(preds, targets)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/mae", self.test_mae, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss}
+        return {"loss": loss, "preds": preds, "targets": targets}
 
     def test_epoch_end(self, outputs: List[Any]):
         pass
@@ -125,36 +135,30 @@ class LitModel(pl.LightningModule):
 
 def main():
     model = LitModel()
-    datamodule = FaceAgeDataModule(num_workers=4)
-
-    # model ckpt callback
-    ckpt_callback = pl.callbacks.ModelCheckpoint(
+    datamodule = FaceAgeDataModule()
+    
+    # model checkpoint callback
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor="val/mae_best",
         dirpath="checkpoints",
-        filename="model-{epoch:02d}-{val/mae_best:.2f}",
-        save_top_k=1,
+        filename="best-checkpoint",
+        save_top_k=2,
         save_last=True,
         mode="min",
         save_weights_only=True,
     )
-    callbacks = [ckpt_callback]
 
+
+    checkpoint_callback = [checkpoint_callback]
     # get wandb logger
     logger = pl.loggers.WandbLogger(project="face-age", name="face-age", save_dir="logs")
 
-    trainer = pl.Trainer(accelerator="cpu", max_epochs=10, callbacks=callbacks, val_check_interval=0.5, logger=logger)
 
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer = pl.Trainer(accelerator="cpu", max_epochs=10, callbacks=checkpoint_callback, val_check_interval=0.5, logger=logger)
 
+    trainer.fit(model, datamodule=datamodule)
+    
     trainer.test(model=model, datamodule=datamodule)
-
-    # LitModel.load_from_checkpoint(ckpt_callback.best_model_path)
-
-    # save ckpt to onnx
-    # trainer.to_onnx(model=model, ckpt_path=...)
-
-    # trainer.predict(model=model, datamodule=datamodule, ckpt_path=...)
-
 
 if __name__ == "__main__":
     main()

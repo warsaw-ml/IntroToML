@@ -70,7 +70,7 @@ class FaceAgeDataModule(LightningDataModule):
         self,
         data_dir: str = "data/",
         train_val_test_split: Tuple[int, int, int] = (20708, 2990, 10),
-        batch_size: int = 32,
+        batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
     ):

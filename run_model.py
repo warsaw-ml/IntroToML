@@ -1,11 +1,11 @@
 import torch
 import pytorch_lightning as pl
 
-from train import LitModule
+from train import LitModel
 from face_age_datamodule import FaceAgeDataset
 
 def main():
-    model = LitModule.load_from_checkpoint("checkpoints/last-v2.ckpt")
+    model = LitModel.load_from_checkpoint("checkpoints/last.ckpt")
     model.eval()
     model.freeze()
     data = FaceAgeDataset()
