@@ -145,7 +145,8 @@ dmypy.json
 *.tar.gz
 
 # Custom
-data/
+/data/
+/models/
 logs/
 .env
 .DS_Store

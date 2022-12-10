@@ -1,56 +1,33 @@
+import pyrootutils
+
+root = pyrootutils.setup_root(__file__, pythonpath=True, cwd=True)
+
 from typing import Any, List
-from face_age_datamodule import FaceAgeDataModule
-import torch
+
 import pytorch_lightning as pl
-from pytorch_lightning import LightningModule
-from torchmetrics import MinMetric, MeanMetric
-from torchmetrics.classification.accuracy import Accuracy
-from torchmetrics import MeanAbsoluteError as MAE
-
-from typing import Any, List
-
 import torch
-from torchmetrics import MaxMetric, MeanMetric, MinMetric
-
 from torchmetrics import MeanAbsoluteError as MAE
+from torchmetrics import MeanMetric, MinMetric
 
-import torch.nn as nn
-
-import torch.nn.functional as F
-
-
-class Net(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1)
-        self.pool1 = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
-        self.pool2 = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(32 * 25 * 25, 256)
-        self.fc2 = nn.Linear(256, 1)
-
-    def forward(self, x):
-        x = self.pool1(F.relu(self.conv1(x)))
-        x = self.pool2(F.relu(self.conv2(x)))
-        x = x.view(-1, 32 * 25 * 25)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+from src.models import models
+from src.data.face_age_datamodule import FaceAgeDataModule
 
 
 class LitModel(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, rescale_labels: bool = True):
         super().__init__()
 
-        # this line allows to maeess init params with 'self.hparams' attribute
+        # this line allows to init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters()
 
         # declare network with 1 output unit with rgb image input 100x100
-        self.net = Net()
+        self.net = models.SimpleConvNet_100x100()
+        # self.net = models.SimpleConvNet_224x224()
+        # self.net = models.PretrainedResnetVGGFace2()
 
         # loss function
-        # self.criterion = torch.nn.MSELoss
+        # self.criterion = torch.nn.MSELoss()
         self.criterion = torch.nn.SmoothL1Loss()
 
         # metric objects for calculating and averaging maeuracy across batches
@@ -69,15 +46,26 @@ class LitModel(pl.LightningModule):
     def forward(self, x: torch.Tensor):
         return self.net(x)
 
+    def predict(self, batch):
+        x, y = batch
+        preds = self.forward(x)
+        return preds
+
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
-        # so we need to make sure val_mae_best doesn't store maeuracy from these checks
+        # so we need to make sure val_mae_best doesn't store mae from these checks
         self.val_mae_best.reset()
 
     def model_step(self, batch: Any):
         x, y = batch
         preds = self.forward(x)
         loss = self.criterion(preds, y)
+
+        # rescale prediction from [0-1] to [0-80]
+        if self.hparams.rescale_labels:
+            preds = preds * 80
+            y = y * 80
+
         return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -88,43 +76,30 @@ class LitModel(pl.LightningModule):
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/mae", self.train_mae, on_step=False, on_epoch=True, prog_bar=True)
 
-        # we can return here dict with any tensors
-        # and then read it in some callback or in `training_epoch_end()` below
-        # remember to always return loss from `training_step()` or backpropagation will fail!
-        return {"loss": loss, "preds": preds, "targets": targets}
+        return {"loss": loss}
 
     def training_epoch_end(self, outputs: List[Any]):
-        # `outputs` is a list of dicts returned from `training_step()`
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
-        # update and log metrics
         self.val_loss(loss)
         self.val_mae(preds, targets)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/mae", self.val_mae, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss, "preds": preds, "targets": targets}
-
     def validation_epoch_end(self, outputs: List[Any]):
-        mae = self.val_mae.compute()  # get current val mae
-        self.val_mae_best(mae)  # update best so far val mae
-        # log `val_mae_best` as a value through `.compute()` method, instead of as a metric object
-        # otherwise metric would be reset by lightning after each epoch
+        self.val_mae_best(self.val_mae.compute())  # update best so far val mae
         self.log("val/mae_best", self.val_mae_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
-        # update and log metrics
         self.test_loss(loss)
         self.test_mae(preds, targets)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/mae", self.test_mae, on_step=False, on_epoch=True, prog_bar=True)
-
-        return {"loss": loss, "preds": preds, "targets": targets}
 
     def test_epoch_end(self, outputs: List[Any]):
         pass
@@ -134,31 +109,63 @@ class LitModel(pl.LightningModule):
 
 
 def main():
-    model = LitModel()
-    datamodule = FaceAgeDataModule()
-    
+    pl.seed_everything(42)
+
+    data_dir = root / "data"
+    logs_dir = root / "logs"
+
+    datamodule = FaceAgeDataModule(
+        data_dir=data_dir,
+        num_workers=0,
+        batch_size=64,
+        img_size=(100, 100),
+        # img_size=(224, 224),
+        label_clipping=None,
+        normalize_labels=False,
+        # label_clipping=(0, 80),
+        # normalize_labels=True,
+    )
+
+    model = LitModel(rescale_labels=False)
+
+    callbacks = []
+    loggers = []
+
     # model checkpoint callback
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        monitor="val/mae_best",
-        dirpath="checkpoints",
-        filename="best-checkpoint",
-        save_top_k=2,
+        monitor="val/loss",
+        dirpath=logs_dir / "checkpoints",
+        save_top_k=1,
         save_last=True,
         mode="min",
         save_weights_only=True,
+        filename="best-checkpoint",
+    )
+    callbacks.append(checkpoint_callback)
+
+    # experiment logger
+    # wandb_logger = pl.loggers.WandbLogger(
+    #     project="face-age",
+    #     name="100x100+convnet+SmoothL1Loss",
+    #     save_dir=logs_dir,
+    # )
+    # loggers.append(wandb_logger)
+
+    trainer = pl.Trainer(
+        callbacks=callbacks,
+        logger=loggers,
+        default_root_dir=logs_dir,
+        accelerator="cpu",
+        max_epochs=10,
+        val_check_interval=0.25,
     )
 
+    trainer.validate(model=model, datamodule=datamodule)
 
-    checkpoint_callback = [checkpoint_callback]
-    # get wandb logger
-    logger = pl.loggers.WandbLogger(project="face-age", name="face-age", save_dir="logs")
+    trainer.fit(model=model, datamodule=datamodule)
 
-
-    trainer = pl.Trainer(accelerator="cpu", max_epochs=10, callbacks=checkpoint_callback, val_check_interval=0.5, logger=logger)
-
-    trainer.fit(model, datamodule=datamodule)
-    
     trainer.test(model=model, datamodule=datamodule)
+
 
 if __name__ == "__main__":
     main()
