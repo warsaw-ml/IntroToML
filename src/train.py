@@ -134,7 +134,7 @@ def main():
 
     # model checkpoint callback
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        monitor="val/loss",
+        monitor="val/mae",
         dirpath=logs_dir / "checkpoints",
         save_top_k=1,
         save_last=True,
@@ -165,7 +165,7 @@ def main():
 
     trainer.fit(model=model, datamodule=datamodule)
 
-    trainer.test(model=model, datamodule=datamodule)
+    trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
 
 
 if __name__ == "__main__":
