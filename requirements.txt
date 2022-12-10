@@ -6,3 +6,5 @@ pytorch-lightning>=1.7.0
 torchmetrics
 tqdm
 Pillow
+efficientnet-pytorch
+pyrootutils

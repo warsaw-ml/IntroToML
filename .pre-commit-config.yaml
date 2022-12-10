@@ -29,7 +29,7 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        args: ["--profile", "black", "--filter-files"]
+        args: ["--profile", "black"]
 
   # python upgrading syntax to newer version
   - repo: https://github.com/asottile/pyupgrade
@@ -78,24 +78,3 @@ repos:
         args:
           - --skip=logs/**,data/**,*.ipynb
           # - --ignore-words-list=abc,def
-
-  # jupyter notebook cell output clearing
-  # - repo: https://github.com/kynan/nbstripout
-  #   rev: 0.5.0
-  #   hooks:
-  #     - id: nbstripout
-
-  # jupyter notebook linting
-  # - repo: https://github.com/nbQA-dev/nbQA
-  #   rev: 1.4.0
-  #   hooks:
-  #     - id: nbqa-black
-  #       args: ["--line-length=99"]
-  #     - id: nbqa-isort
-  #       args: ["--profile=black"]
-  #     - id: nbqa-flake8
-  #       args:
-  #         [
-  #           "--extend-ignore=E203,E402,E501,F401,F841",
-  #           "--exclude=logs/*,data/*",
-  #         ]

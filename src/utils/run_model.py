@@ -1,8 +1,9 @@
-import torch
 import pytorch_lightning as pl
+import torch
+from face_age_datamodule import FaceAgeDataset
 
 from train import LitModel
-from face_age_datamodule import FaceAgeDataset
+
 
 def main():
     model = LitModel.load_from_checkpoint("checkpoints/last.ckpt")
