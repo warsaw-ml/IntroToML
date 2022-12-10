@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
+
 from src.models.resnet import resnet50
 
 
@@ -47,19 +48,15 @@ class SimpleConvNet_224x224(nn.Module):
         return x
 
 
-# TODO
-# class PretrainedEfficientNet(nn.Module):
-#     def __init__(self):
-# super().__init__()
+class PretrainedEfficientNet(nn.Module):
+    def __init__(self):
+        super().__init__()
 
-#         self.model = EfficientNet.from_pretrained("efficientnet-b0")
-#         self.fc = nn.Linear(1280, 1)
+        self.model = EfficientNet.from_pretrained("efficientnet-b0", num_classes=1)
 
-#     def forward(self, x):
-#         x = self.model(x)
-#         x = x.view(-1, 1280)
-#         x = self.fc(x)
-#         return x
+    def forward(self, x):
+        x = self.model(x)
+        return x
 
 
 class PretrainedResnetVGGFace2(nn.Module):
@@ -68,10 +65,6 @@ class PretrainedResnetVGGFace2(nn.Module):
         self.model = resnet50(pretrained=False, remove_classifier=True)
 
         state_dict = torch.load("models/flr_r50_vgg_face.pth", map_location="cpu")["state_dict"]
-
-        # drop fc.weight and fc.bias
-        # state_dict.pop("fc.weight")
-        # state_dict.pop("fc.bias")
 
         # remove "module.base_net." prefix
         state_dict = {k.replace("module.base_net.", ""): v for k, v in state_dict.items()}
@@ -82,17 +75,23 @@ class PretrainedResnetVGGFace2(nn.Module):
         # load pretrained weights
         self.model.load_state_dict(state_dict)
 
-        self.fc = nn.Linear(2048, 1)
+        # self.fc = nn.Linear(2048, 1)
+
+        self.fc1 = nn.Linear(2048, 256)
+        self.fc2 = nn.Linear(256, 1)
 
     def forward(self, x):
         x = self.model(x)
         x = torch.relu(x)
-        x = self.fc(x)
+        x = self.fc1(x)
+        x = torch.relu(x)
+        x = self.fc2(x)
         return x
 
 
 if __name__ == "__main__":
-    model = PretrainedResnetVGGFace2()
+    # model = PretrainedResnetVGGFace2()
+    model = PretrainedEfficientNet()
 
     # mock input data
     x = torch.randn(1, 3, 224, 224)
@@ -100,5 +99,4 @@ if __name__ == "__main__":
     output = model.forward(x)
 
     print(output.shape)
-    print(output.std())
     print(output.mean())
