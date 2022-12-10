@@ -66,15 +66,14 @@ class FaceAgeDataset(torch.utils.data.Dataset):
 if __name__ == "__main__":
     import pyrootutils
 
-    imagenet_mean = (0.485, 0.456, 0.406)
-    imagenet_std = (0.229, 0.224, 0.225)
-    transform = [transforms.Normalize(mean=imagenet_mean, std=imagenet_std)]
+    # imagenet_mean = (0.485, 0.456, 0.406)
+    # imagenet_std = (0.229, 0.224, 0.225)
+    # transform = [transforms.Normalize(mean=imagenet_mean, std=imagenet_std)]
+    transform = None
 
     data_dir = pyrootutils.find_root() / "data/"
-    dataset = FaceAgeDataset(data_dir=data_dir, transform=transform)
+    dataset = FaceAgeDataset(data_dir=data_dir, transform=transform, img_size=(100, 100))
     x, y = dataset[0]
-    print(x.shape, y.shape)
-    print(y)
 
     labels = dataset.labels.float()
     print("stats:", labels.min(), labels.max(), labels.mean(), labels.std())

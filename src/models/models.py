@@ -75,8 +75,6 @@ class PretrainedResnetVGGFace2(nn.Module):
         # load pretrained weights
         self.model.load_state_dict(state_dict)
 
-        # self.fc = nn.Linear(2048, 1)
-
         self.fc1 = nn.Linear(2048, 256)
         self.fc2 = nn.Linear(256, 1)
 

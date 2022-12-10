@@ -29,9 +29,17 @@ class FaceAgeDataModule(LightningDataModule):
         # self.imagenet_std = (0.229, 0.224, 0.225)
         # self.transform = [transforms.Normalize(self.imagenet_mean, self.imagenet_std)]
 
+        # self.mean = (0.5961, 0.4564, 0.3906)
+        # self.std = (0.2587, 0.2307, 0.2262)
+        # self.transform = [transforms.Normalize(self.mean, self.std)]
+
         self.transform = None
 
         # TODO: add augmentations to transforms
+
+        # TODO: Undersample of Oversample the data
+
+        # TODO: Add data stratification
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None

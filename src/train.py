@@ -14,7 +14,7 @@ from src.data.face_age_datamodule import FaceAgeDataModule
 
 
 class LitModel(pl.LightningModule):
-    def __init__(self, rescale_labels: bool = True):
+    def __init__(self, rescale_labels: bool = False):
         super().__init__()
 
         # this line allows to init params with 'self.hparams' attribute
@@ -25,6 +25,7 @@ class LitModel(pl.LightningModule):
         self.net = models.SimpleConvNet_100x100()
         # self.net = models.SimpleConvNet_224x224()
         # self.net = models.PretrainedResnetVGGFace2()
+        # self.net = models.PretrainedEfficientNet()
 
         # loss function
         # self.criterion = torch.nn.MSELoss()
@@ -90,7 +91,7 @@ class LitModel(pl.LightningModule):
         self.log("val/mae", self.val_mae, on_step=False, on_epoch=True, prog_bar=True)
 
     def validation_epoch_end(self, outputs: List[Any]):
-        self.val_mae_best(self.val_mae.compute())  # update best so far val mae
+        self.val_mae_best(self.val_mae.compute())
         self.log("val/mae_best", self.val_mae_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
@@ -120,9 +121,9 @@ def main():
         batch_size=64,
         img_size=(100, 100),
         # img_size=(224, 224),
-        label_clipping=None,
+        # label_clipping=None,
+        label_clipping=(0, 80),
         normalize_labels=False,
-        # label_clipping=(0, 80),
         # normalize_labels=True,
     )
 
@@ -146,7 +147,7 @@ def main():
     # experiment logger
     # wandb_logger = pl.loggers.WandbLogger(
     #     project="face-age",
-    #     name="100x100+convnet+SmoothL1Loss",
+    #     name="100x100+convnet",
     #     save_dir=logs_dir,
     # )
     # loggers.append(wandb_logger)
