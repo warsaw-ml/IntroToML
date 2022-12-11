@@ -11,7 +11,10 @@ import torch
 class ViT(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=1)
+        # self.model = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=1)
+        # self.model = timm.create_model("convnext_tiny_in22k", pretrained=True, num_classes=1)
+        # self.model = timm.create_model("vit_small_patch16_224", pretrained=True, num_classes=1)
+        self.model = timm.create_model("vit_small_patch32_224", pretrained=True, num_classes=1)
 
     def forward(self, x):
         x = self.model(x)
