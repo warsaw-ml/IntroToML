@@ -5,13 +5,13 @@ import torch
 from PIL import Image
 from torchvision.transforms import transforms
 
-
+MAX_AGE = 80
 class FaceAgeDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         data_dir="data/",
         img_size=(224, 224),
-        label_clipping=(0, 80),
+        label_clipping=(0, MAX_AGE),
         normalize_labels=True,
         transform=None,
     ):
@@ -58,7 +58,7 @@ class FaceAgeDataset(torch.utils.data.Dataset):
             label = label.clip(min=self.label_clipping[0], max=self.label_clipping[1])
 
         if self.normalize_labels:
-            label = label / self.labels.max()
+            label = label / MAX_AGE
 
         return img, label
 
