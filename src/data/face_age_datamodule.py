@@ -72,14 +72,18 @@ class FaceAgeDataModule(LightningDataModule):
                 else:
                     count_occurences[label] += 1
                 
-                if count_occurences[label] < 25:
-                    test_data.append((img, tensor))
-                elif count_occurences[label] < 50:
-                    val_data.append((img, tensor))
+                if count_occurences[label] < 50:
+                    if count_occurences[label] %2 == 0:
+                        test_data.append((img, tensor))
+                    else:
+                        val_data.append((img, tensor))
                 elif count_occurences[label] <= MAX_DATA_CLASS:
                     new_data.append((img, tensor))
                 
-
+            print(f"Val data size: {val_data.__sizeof__()}")
+            print(f"Test data size: {test_data.__sizeof__()}")
+            print(f"Train data before agumentation: {new_data.__sizeof__()}")
+            
                 
             #data argumentation on new_data(train data)
             mirror_data = list()
