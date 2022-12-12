@@ -79,34 +79,39 @@ class FaceAgeDataModule(LightningDataModule):
                 elif count_occurences[label] <= MAX_DATA_CLASS:
                     new_data.append((img, tensor))
                 
-            
-            
+
+                
             #data argumentation on new_data(train data)
             mirror_data = list()
             for img, tensor in new_data:
+                if count_occurences[tensor.item()] > MAX_DATA_CLASS:
+                    continue
+                count_occurences[tensor.item()] += 1
                 copy_img = transforms.functional.to_pil_image(img)
                 mirror_img = ImageOps.mirror(copy_img)
                 mirror_data.append((transforms.functional.to_tensor(mirror_img), tensor))
-            
-            #rotate data by 25 degrees
+
+            new_data.extend(mirror_data)
+            #rotate data by random degrees from -30 to 30
             rotate_data = list()
+            rotater = transforms.RandomRotation(degrees=(-30,30))
+
             for img, tensor in new_data:
-                rotated_tensor = rotate(img, 25)
-                rotate_data.append((rotated_tensor, tensor))
-                rotated_tensor = rotate(img, -25)
-                rotate_data.append((rotated_tensor, tensor))
+                if count_occurences[tensor.item()] > MAX_DATA_CLASS:
+                    continue
+                count_occurences[tensor.item()] += 3
+                rotated_tensors = [(rotater(img), tensor) for _ in range(3)]
+                rotate_data.append(rotated_tensors[0])
+                rotate_data.append(rotated_tensors[1])
+                rotate_data.append(rotated_tensors[2])
+                
+            new_data.extend(rotate_data)
 
-            for img, tensor in mirror_data:
-                rotated_tensor = rotate(img, 25)
-                rotate_data.append((rotated_tensor, tensor))
-                rotated_tensor = rotate(img, -25)
-                rotate_data.append((rotated_tensor, tensor))
-
+            
             #val_data - validation
             #test_data - test
             #new_data - train
-            new_data.append(mirror_data)
-            new_data.append(rotate_data)
+            
 
             self.data_test = FaceAgeDatasetAugmented(test_data)
             self.data_val = FaceAgeDatasetAugmented(val_data)

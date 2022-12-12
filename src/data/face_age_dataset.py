@@ -63,9 +63,9 @@ class FaceAgeDataset(torch.utils.data.Dataset):
         return img, label
 
 class FaceAgeDatasetAugmented(torch.utils.data.Dataset):
-    def __init__(self, dataset, augmentations):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.augmentations = augmentations
+        
     
     def __len__(self):
         return len(self.dataset)
