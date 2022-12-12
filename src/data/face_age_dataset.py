@@ -62,6 +62,17 @@ class FaceAgeDataset(torch.utils.data.Dataset):
 
         return img, label
 
+class FaceAgeDatasetAugmented(torch.utils.data.Dataset):
+    def __init__(self, dataset, augmentations):
+        self.dataset = dataset
+        self.augmentations = augmentations
+    
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        img, label = self.dataset[idx]        
+        return img, label
 
 if __name__ == "__main__":
     import pyrootutils

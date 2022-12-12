@@ -4,9 +4,12 @@ import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.transforms import transforms
+from torchvision import transforms
+from src.data.face_age_dataset import FaceAgeDataset, FaceAgeDatasetAugmented
+from PIL import Image, ImageOps
+from torchvision.transforms.functional import rotate
 
-from src.data.face_age_dataset import FaceAgeDataset
-
+MAX_DATA_CLASS = 700
 
 class FaceAgeDataModule(LightningDataModule):
     def __init__(
@@ -54,11 +57,60 @@ class FaceAgeDataModule(LightningDataModule):
                 normalize_labels=self.hparams.normalize_labels,
                 transform=self.transform,
             )
-            self.data_train, self.data_val, self.data_test = random_split(
-                dataset=dataset,
-                lengths=self.hparams.train_val_test_split,
-                generator=torch.Generator().manual_seed(42),
-            )
+            
+            data = list(dataset)
+
+            #cut data to have MAX_DATA_CLASS per class
+            new_data = list()
+            test_data = list()
+            val_data = list()
+            count_occurences = dict()
+            for img, tensor in data:
+                label = tensor.item()
+                if label not in count_occurences:
+                    count_occurences[label] = 1
+                else:
+                    count_occurences[label] += 1
+                
+                if count_occurences[label] < 25:
+                    test_data.append((img, tensor))
+                elif count_occurences[label] < 50:
+                    val_data.append((img, tensor))
+                elif count_occurences[label] <= MAX_DATA_CLASS:
+                    new_data.append((img, tensor))
+                
+            
+            
+            #data argumentation on new_data(train data)
+            mirror_data = list()
+            for img, tensor in new_data:
+                copy_img = transforms.functional.to_pil_image(img)
+                mirror_img = ImageOps.mirror(copy_img)
+                mirror_data.append((transforms.functional.to_tensor(mirror_img), tensor))
+            
+            #rotate data by 25 degrees
+            rotate_data = list()
+            for img, tensor in new_data:
+                rotated_tensor = rotate(img, 25)
+                rotate_data.append((rotated_tensor, tensor))
+                rotated_tensor = rotate(img, -25)
+                rotate_data.append((rotated_tensor, tensor))
+
+            for img, tensor in mirror_data:
+                rotated_tensor = rotate(img, 25)
+                rotate_data.append((rotated_tensor, tensor))
+                rotated_tensor = rotate(img, -25)
+                rotate_data.append((rotated_tensor, tensor))
+
+            #val_data - validation
+            #test_data - test
+            #new_data - train
+            new_data.append(mirror_data)
+            new_data.append(rotate_data)
+
+            self.data_test = FaceAgeDatasetAugmented(test_data)
+            self.data_val = FaceAgeDatasetAugmented(val_data)
+            self.data_train = FaceAgeDatasetAugmented(new_data)
 
     def train_dataloader(self):
         return DataLoader(
