@@ -99,19 +99,44 @@ class FaceAgeDataModule(LightningDataModule):
             for img, tensor in new_data:
                 if count_occurences[tensor.item()] > MAX_DATA_CLASS:
                     continue
-                count_occurences[tensor.item()] += 3
-                rotated_tensors = [(rotater(img), tensor) for _ in range(3)]
+                count_occurences[tensor.item()] += 2
+                rotated_tensors = [(rotater(img), tensor) for _ in range(2)]
                 rotate_data.append(rotated_tensors[0])
                 rotate_data.append(rotated_tensors[1])
-                rotate_data.append(rotated_tensors[2])
                 
             new_data.extend(rotate_data)
 
+            #color jitter
+            jitter = transforms.ColorJitter(brightness=.5, hue=.3)
+            jitter_data = list()
+            for img, tensor in new_data:
+                if count_occurences[tensor.item()] > MAX_DATA_CLASS:
+                    continue
+                count_occurences[tensor.item()] += 2
+                jitter_tensors = [(jitter(img), tensor) for _ in range(2)]
+                jitter_data.append(jitter_tensors[0])
+                jitter_data.append(jitter_tensors[1])
+            new_data.extend(jitter_data)
             
+            #random perspective  
+            perspective = transforms.RandomPerspective(distortion_scale=0.5, p=1)
+            perspective_data = list()
+            for img, tensor in new_data:
+                if count_occurences[tensor.item()] > MAX_DATA_CLASS:
+                    continue
+                count_occurences[tensor.item()] += 2
+                perspective_tensors = [(perspective(img), tensor) for _ in range(2)]
+                perspective_data.append(perspective_tensors[0])
+                perspective_data.append(perspective_tensors[1])
+            new_data.extend(perspective_data)
+
+
+            #random posterize
             #val_data - validation
             #test_data - test
             #new_data - train
-            
+            print("Data per class:")            
+            print((count_occurences))
 
             self.data_test = FaceAgeDatasetAugmented(test_data)
             self.data_val = FaceAgeDatasetAugmented(val_data)
