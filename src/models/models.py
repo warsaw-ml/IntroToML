@@ -1,11 +1,9 @@
+# from src.models.resnet import resnet50
+import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
-
-# from src.models.resnet import resnet50
-import timm
-import torch
 
 
 class ViT(nn.Module):

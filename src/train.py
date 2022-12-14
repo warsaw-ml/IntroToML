@@ -9,27 +9,25 @@ import torch
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
 
-from src.models import models
 from src.data.face_age_datamodule import FaceAgeDataModule
+from src.models import models
 
 
 class LitModel(pl.LightningModule):
-    def __init__(self, rescale_labels: bool = False):
+    def __init__(self, rescale_labels_by: int = 1.0):
         super().__init__()
 
         # this line allows to init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
         self.save_hyperparameters()
 
-        # declare network with 1 output unit with rgb image input 100x100
-        self.net = models.SimpleConvNet_100x100()
+        # self.net = models.SimpleConvNet_100x100()
         # self.net = models.SimpleConvNet_224x224()
         # self.net = models.PretrainedResnetVGGFace2()
-        # self.net = models.PretrainedEfficientNet()
+        self.net = models.PretrainedEfficientNet()
 
         # loss function
-        # self.criterion = torch.nn.MSELoss()
-        self.criterion = torch.nn.SmoothL1Loss()
+        self.criterion = torch.nn.MSELoss()
+        # self.criterion = torch.nn.SmoothL1Loss()
 
         # metric objects for calculating and averaging maeuracy across batches
         self.train_mae = MAE()
@@ -63,9 +61,9 @@ class LitModel(pl.LightningModule):
         loss = self.criterion(preds, y)
 
         # rescale prediction from [0-1] to [0-80]
-        if self.hparams.rescale_labels:
-            preds = preds * 80
-            y = y * 80
+        if self.hparams.rescale_labels_by:
+            preds = preds * self.hparams.rescale_labels_by
+            y = y * self.hparams.rescale_labels_by
 
         return loss, preds, y
 
@@ -119,20 +117,14 @@ def main():
         data_dir=data_dir,
         num_workers=0,
         batch_size=64,
-        img_size=(100, 100),
-        # img_size=(224, 224),
-        # label_clipping=None,
-        label_clipping=(0, 80),
-        normalize_labels=False,
-        # normalize_labels=True,
+        normalize_age_by=80,
     )
 
-    model = LitModel(rescale_labels=False)
+    model = LitModel(rescale_labels_by=80)
 
     callbacks = []
     loggers = []
 
-    # model checkpoint callback
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor="val/mae",
         dirpath=logs_dir / "checkpoints",
@@ -144,7 +136,6 @@ def main():
     )
     callbacks.append(checkpoint_callback)
 
-    # experiment logger
     # wandb_logger = pl.loggers.WandbLogger(
     #     project="face-age",
     #     name="100x100+convnet",

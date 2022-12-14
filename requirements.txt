@@ -7,4 +7,5 @@ torchmetrics
 tqdm
 Pillow
 efficientnet-pytorch
+timm
 pyrootutils

@@ -3,15 +3,16 @@ from pathlib import Path
 
 import torch
 from PIL import Image
+from torch.utils.data import Dataset
 from torchvision.transforms import transforms
 
-MAX_AGE = 80
-class FaceAgeDataset(torch.utils.data.Dataset):
+
+class FaceAgeDataset(Dataset):
     def __init__(
         self,
         data_dir="data/",
         img_size=(224, 224),
-        label_clipping=(0, MAX_AGE),
+        label_clipping=(0, 80),
         normalize_labels=True,
         transform=None,
     ):
@@ -58,42 +59,29 @@ class FaceAgeDataset(torch.utils.data.Dataset):
             label = label.clip(min=self.label_clipping[0], max=self.label_clipping[1])
 
         if self.normalize_labels:
-            label = label / MAX_AGE
+            label = label / 80
 
-        return img, label
+        return img, label, idx
 
-class FaceAgeDatasetAugmented(torch.utils.data.Dataset):
+
+class FaceAgeDatasetAugmented(Dataset):
     def __init__(self, dataset):
         self.dataset = dataset
-        
-    
+
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        img, label = self.dataset[idx]        
+        img, label = self.dataset[idx]
         return img, label
+
 
 if __name__ == "__main__":
     import pyrootutils
 
-    # imagenet_mean = (0.485, 0.456, 0.406)
-    # imagenet_std = (0.229, 0.224, 0.225)
-    # transform = [transforms.Normalize(mean=imagenet_mean, std=imagenet_std)]
-    transform = None
-
     data_dir = pyrootutils.find_root() / "data/"
-    dataset = FaceAgeDataset(data_dir=data_dir, transform=transform, img_size=(100, 100))
+    dataset = FaceAgeDataset(data_dir=data_dir, img_size=(100, 100))
     x, y = dataset[0]
 
     labels = dataset.labels.float()
     print("stats:", labels.min(), labels.max(), labels.mean(), labels.std())
-
-    # calculate MAE against tensor full of labels.mean()
-    labels_mean = torch.full_like(labels, labels.mean())
-    mae = torch.abs(labels - labels_mean).mean()
-    print("MAE:", mae)
-
-    # from tqdm import tqdm
-    # for x in tqdm(dataset):
-    #     pass
