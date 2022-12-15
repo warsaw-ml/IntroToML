@@ -6,6 +6,12 @@ from train import LitModel
 
 
 def main():
+
+    # standardize img before passing to model
+    # self.imagenet_mean = (0.485, 0.456, 0.406)
+    # self.imagenet_std = (0.229, 0.224, 0.225)
+    # self.transform = [transforms.Normalize(self.imagenet_mean, self.imagenet_std)]
+
     model = LitModel.load_from_checkpoint("checkpoints/last.ckpt")
     model.eval()
     model.freeze()

@@ -2,6 +2,7 @@ from typing import Optional
 
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 from src.data.face_age_dataset_from_path import FaceAgeDatasetFromPath
 
@@ -10,7 +11,6 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        use_augmented: bool = False,
         normalize_age_by: int = 80,
         batch_size: int = 32,
         num_workers: int = 0,
@@ -26,13 +26,16 @@ class FaceAgeDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if not self.data_train and not self.data_val and not self.data_test:
-            train_path = ["data/face_age_dataset/train"]
-            if self.hparams.use_augmented:
-                train_path.append("data/face_age_dataset/train_augmented")
+
+            # always apply random horizontal flip because why not
+            transform_list = []
+            transform_list.append(transforms.RandomHorizontalFlip(p=0.5))
+            transform = transforms.Compose(transform_list)
 
             self.data_train = FaceAgeDatasetFromPath(
-                img_dir=train_path,
+                img_dir="data/face_age_dataset/train",
                 normalize_age_by=self.hparams.normalize_age_by,
+                transform=transform,
             )
             self.data_val = FaceAgeDatasetFromPath(
                 img_dir="data/face_age_dataset/val",

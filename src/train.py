@@ -6,6 +6,7 @@ from typing import Any, List
 
 import pytorch_lightning as pl
 import torch
+import wandb
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
 
@@ -45,7 +46,8 @@ class FaceAgeModule(pl.LightningModule):
     def forward(self, x: torch.Tensor):
         return self.net(x)
 
-    def predict(self, x):
+    def predict(self, batch):
+        x, y = batch
         preds = self.forward(x)
         preds = preds.clip(0, 1)
         return preds
@@ -120,14 +122,12 @@ def main():
 
     datamodule = FaceAgeDataModule(
         data_dir=data_dir,
-        use_augmented=False,
-        # use_augmented=True,
         normalize_age_by=age_norm_value,
-        num_workers=8,
+        num_workers=12,
         batch_size=32,
     )
 
-    for i in range(5):
+    for i in range(0, 5):
         pl.seed_everything(i)
 
         model = FaceAgeModule(rescale_labels_by=age_norm_value)
@@ -137,8 +137,8 @@ def main():
 
         callbacks.append(
             pl.callbacks.ModelCheckpoint(
-                monitor="val/mae",
-                dirpath=logs_dir / "checkpoints",
+                monitor="val/loss",
+                dirpath=logs_dir / "checkpoints" / str(i),
                 save_top_k=1,
                 save_last=True,
                 mode="min",
@@ -150,11 +150,9 @@ def main():
         loggers.append(
             pl.loggers.WandbLogger(
                 project="face-age",
-                # name="100x100+convnet",
-                name="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
-                # name="224x224+EffNet+balanced-validation+oversampling-augmentation+cut500+clip80+label-norm+MSELoss",
                 save_dir=logs_dir,
-                group="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
+                name="224x224+EffNet-b0-+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
+                group="224x224+EffNet-b0+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
             )
         )
 
@@ -172,6 +170,8 @@ def main():
         trainer.fit(model=model, datamodule=datamodule)
 
         trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
+
+        wandb.finish()
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ from PIL import Image, ImageOps
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
-from torchvision.transforms import transforms
 
 from src.data.face_age_dataset import FaceAgeDataset
 
@@ -139,7 +138,7 @@ class FaceAgeDataModule(LightningDataModule):
             # test_data - test
             # new_data - train
             print("Data per class:")
-            print((count_occurences))
+            print(count_occurences)
 
             self.data_test = FaceAgeDatasetAugmented(test_data)
             self.data_val = FaceAgeDatasetAugmented(val_data)
