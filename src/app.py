@@ -6,6 +6,9 @@ from PIL import Image
 from streamlit_lottie import st_lottie
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 
+from run_model import Predict
+
+
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
 
@@ -28,6 +31,8 @@ run = st.checkbox("Run")
 FRAME_WINDOW = st.image([])
 camera = cv2.VideoCapture(0)
 
+model = Predict()
+pred = {}
 # loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
 with mp_face_detection.FaceDetection(
@@ -47,8 +52,8 @@ with mp_face_detection.FaceDetection(
 
         if results.detections:
             for detection in results.detections:
+                
                 relative_bounding_box = detection.location_data.relative_bounding_box
-                print(relative_bounding_box)
                 rect_start_point = _normalized_to_pixel_coordinates(
                     relative_bounding_box.xmin,
                     relative_bounding_box.ymin,
@@ -63,9 +68,13 @@ with mp_face_detection.FaceDetection(
                 )
                 cropped_image = image[rect_start_point[1]:rect_end_point[1], rect_start_point[0]:rect_end_point[0]]
                 cv2.imwrite("image.jpg", cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR))
-
-                print(rect_start_point)
-                print(rect_end_point)
+                id = detection.label_id[0]
+                if id not in pred:
+                    face = Image.fromarray(cropped_image)
+                    pred[id] = model.predict(face)
+                    print(pred)
+                
+                
                 # <code>
                 # machine learning things - model prediction for detection and printing age on the image
                 # </code>
