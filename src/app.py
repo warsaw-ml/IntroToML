@@ -4,6 +4,7 @@ import requests
 import streamlit as st
 from PIL import Image
 from streamlit_lottie import st_lottie
+from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
@@ -36,6 +37,7 @@ with mp_face_detection.FaceDetection(
         st.empty()
         # capture image from the camera
         _, frame = camera.read()
+        image_rows, image_cols, _ = frame.shape
 
         # convert BGR colours to RGB
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -45,6 +47,25 @@ with mp_face_detection.FaceDetection(
 
         if results.detections:
             for detection in results.detections:
+                relative_bounding_box = detection.location_data.relative_bounding_box
+                print(relative_bounding_box)
+                rect_start_point = _normalized_to_pixel_coordinates(
+                    relative_bounding_box.xmin,
+                    relative_bounding_box.ymin,
+                    image_cols,
+                    image_rows
+                )
+                rect_end_point = _normalized_to_pixel_coordinates(
+                    relative_bounding_box.xmin + relative_bounding_box.width,
+                    relative_bounding_box.ymin + relative_bounding_box.height,
+                    image_cols,
+                    image_rows
+                )
+                cropped_image = image[rect_start_point[1]:rect_end_point[1], rect_start_point[0]:rect_end_point[0]]
+                cv2.imwrite("image.jpg", cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR))
+
+                print(rect_start_point)
+                print(rect_end_point)
                 # <code>
                 # machine learning things - model prediction for detection and printing age on the image
                 # </code>
