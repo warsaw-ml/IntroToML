@@ -10,8 +10,9 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        normalize_age_by=80,
-        batch_size: int = 64,
+        use_augmented: bool = False,
+        normalize_age_by: int = 80,
+        batch_size: int = 32,
         num_workers: int = 0,
         pin_memory: bool = False,
     ):
@@ -25,16 +26,19 @@ class FaceAgeDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if not self.data_train and not self.data_val and not self.data_test:
-            self.data_test = FaceAgeDatasetFromPath(
-                img_dir=["data/face_age_dataset/train"],
-                # img_dir=["data/face_age_dataset/train", "data/face_age_dataset/train_augmented"],
+            train_path = ["data/face_age_dataset/train"]
+            if self.hparams.use_augmented:
+                train_path.append("data/face_age_dataset/train_augmented")
+
+            self.data_train = FaceAgeDatasetFromPath(
+                img_dir=train_path,
                 normalize_age_by=self.hparams.normalize_age_by,
             )
             self.data_val = FaceAgeDatasetFromPath(
                 img_dir="data/face_age_dataset/val",
                 normalize_age_by=self.hparams.normalize_age_by,
             )
-            self.data_train = FaceAgeDatasetFromPath(
+            self.data_test = FaceAgeDatasetFromPath(
                 img_dir="data/face_age_dataset/test",
                 normalize_age_by=self.hparams.normalize_age_by,
             )

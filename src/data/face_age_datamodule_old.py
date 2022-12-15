@@ -6,11 +6,11 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
 from torchvision.transforms import transforms
-from torchvision.transforms.functional import rotate
 
-from src.data.face_age_dataset import FaceAgeDataset, FaceAgeDatasetAugmented
+from src.data.face_age_dataset import FaceAgeDataset
 
 MAX_DATA_CLASS = 700
+
 
 class FaceAgeDataModule(LightningDataModule):
     def __init__(
@@ -58,10 +58,10 @@ class FaceAgeDataModule(LightningDataModule):
                 normalize_labels=self.hparams.normalize_labels,
                 transform=self.transform,
             )
-            
+
             data = list(dataset)
 
-            #cut data to have MAX_DATA_CLASS per class
+            # cut data to have MAX_DATA_CLASS per class
             new_data = list()
             test_data = list()
             val_data = list()
@@ -72,21 +72,20 @@ class FaceAgeDataModule(LightningDataModule):
                     count_occurences[label] = 1
                 else:
                     count_occurences[label] += 1
-                
+
                 if count_occurences[label] < 50:
-                    if count_occurences[label] %2 == 0:
+                    if count_occurences[label] % 2 == 0:
                         test_data.append((img, tensor))
                     else:
                         val_data.append((img, tensor))
                 elif count_occurences[label] <= MAX_DATA_CLASS:
                     new_data.append((img, tensor))
-                
+
             print(f"Val data size: {val_data.__sizeof__()}")
             print(f"Test data size: {test_data.__sizeof__()}")
             print(f"Train data before agumentation: {new_data.__sizeof__()}")
-            
-                
-            #data argumentation on new_data(train data)
+
+            # data argumentation on new_data(train data)
             mirror_data = list()
             for img, tensor in new_data:
                 if count_occurences[tensor.item()] > MAX_DATA_CLASS:
@@ -97,9 +96,9 @@ class FaceAgeDataModule(LightningDataModule):
                 mirror_data.append((transforms.functional.to_tensor(mirror_img), tensor))
 
             new_data.extend(mirror_data)
-            #rotate data by random degrees from -30 to 30
+            # rotate data by random degrees from -30 to 30
             rotate_data = list()
-            rotater = transforms.RandomRotation(degrees=(-30,30))
+            rotater = transforms.RandomRotation(degrees=(-30, 30))
 
             for img, tensor in new_data:
                 if count_occurences[tensor.item()] > MAX_DATA_CLASS:
@@ -108,11 +107,11 @@ class FaceAgeDataModule(LightningDataModule):
                 rotated_tensors = [(rotater(img), tensor) for _ in range(2)]
                 rotate_data.append(rotated_tensors[0])
                 rotate_data.append(rotated_tensors[1])
-                
+
             new_data.extend(rotate_data)
 
-            #color jitter
-            jitter = transforms.ColorJitter(brightness=.5, hue=.3)
+            # color jitter
+            jitter = transforms.ColorJitter(brightness=0.5, hue=0.3)
             jitter_data = list()
             for img, tensor in new_data:
                 if count_occurences[tensor.item()] > MAX_DATA_CLASS:
@@ -122,8 +121,8 @@ class FaceAgeDataModule(LightningDataModule):
                 jitter_data.append(jitter_tensors[0])
                 jitter_data.append(jitter_tensors[1])
             new_data.extend(jitter_data)
-            
-            #random perspective  
+
+            # random perspective
             perspective = transforms.RandomPerspective(distortion_scale=0.5, p=1)
             perspective_data = list()
             for img, tensor in new_data:
@@ -135,12 +134,11 @@ class FaceAgeDataModule(LightningDataModule):
                 perspective_data.append(perspective_tensors[1])
             new_data.extend(perspective_data)
 
-
-            #random posterize
-            #val_data - validation
-            #test_data - test
-            #new_data - train
-            print("Data per class:")            
+            # random posterize
+            # val_data - validation
+            # test_data - test
+            # new_data - train
+            print("Data per class:")
             print((count_occurences))
 
             self.data_test = FaceAgeDatasetAugmented(test_data)
@@ -173,3 +171,15 @@ class FaceAgeDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )
+
+
+class FaceAgeDatasetAugmented(Dataset):
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        img, label = self.dataset[idx]
+        return img, label

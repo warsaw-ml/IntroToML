@@ -11,9 +11,9 @@ class FaceAgeDataset(Dataset):
     def __init__(
         self,
         data_dir="data/",
-        img_size=(224, 224),
+        img_size=(100, 100),
         label_clipping=(0, 80),
-        normalize_labels=True,
+        normalize_labels=False,
         transform=None,
     ):
         self.data_dir = Path(data_dir)
@@ -62,18 +62,6 @@ class FaceAgeDataset(Dataset):
             label = label / 80
 
         return img, label, idx
-
-
-class FaceAgeDatasetAugmented(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, idx):
-        img, label = self.dataset[idx]
-        return img, label
 
 
 if __name__ == "__main__":

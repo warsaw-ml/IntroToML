@@ -42,11 +42,14 @@ class FaceAgeDatasetFromPath(Dataset):
     def __getitem__(self, idx):
         img = torch.load(self.img_paths[idx])
         label = self.labels[idx]
+        
+        img = torch.FloatTensor(img)
+        label = torch.FloatTensor([label])
 
         if self.normalize_age_by:
             label = label / self.normalize_age_by
 
-        return torch.FloatTensor(img), torch.LongTensor([label])
+        return img, label 
 
 
 if __name__ == "__main__":

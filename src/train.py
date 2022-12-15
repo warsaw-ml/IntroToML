@@ -13,11 +13,11 @@ from src.data.face_age_datamodule import FaceAgeDataModule
 from src.models import models
 
 
-class LitModel(pl.LightningModule):
+class FaceAgeModule(pl.LightningModule):
     def __init__(self, rescale_labels_by: int = 1.0):
         super().__init__()
 
-        # this line allows to init params with 'self.hparams' attribute
+        # this line allows to access init params with 'self.hparams' attribute
         self.save_hyperparameters()
 
         # self.net = models.SimpleConvNet_100x100()
@@ -113,41 +113,49 @@ def main():
     data_dir = root / "data"
     logs_dir = root / "logs"
 
+    age_norm_value = 80
+
     datamodule = FaceAgeDataModule(
         data_dir=data_dir,
-        num_workers=0,
-        batch_size=64,
-        normalize_age_by=80,
+        use_augmented=False,
+        # use_augmented=True,
+        normalize_age_by=age_norm_value,
+        num_workers=8,
+        batch_size=32,
     )
 
-    model = LitModel(rescale_labels_by=80)
+    model = FaceAgeModule(rescale_labels_by=age_norm_value)
 
     callbacks = []
     loggers = []
 
-    checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        monitor="val/mae",
-        dirpath=logs_dir / "checkpoints",
-        save_top_k=1,
-        save_last=True,
-        mode="min",
-        save_weights_only=True,
-        filename="best-checkpoint",
+    callbacks.append(
+        pl.callbacks.ModelCheckpoint(
+            monitor="val/mae",
+            dirpath=logs_dir / "checkpoints",
+            save_top_k=1,
+            save_last=True,
+            mode="min",
+            save_weights_only=True,
+            filename="best-checkpoint",
+        )
     )
-    callbacks.append(checkpoint_callback)
 
-    # wandb_logger = pl.loggers.WandbLogger(
-    #     project="face-age",
-    #     name="100x100+convnet",
-    #     save_dir=logs_dir,
-    # )
-    # loggers.append(wandb_logger)
+    loggers.append(
+        pl.loggers.WandbLogger(
+            project="face-age",
+            # name="100x100+convnet",
+            # name="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
+            name="224x224+EffNet+balanced-validation+oversampling-augmentation+cut500+clip80+label-norm+MSELoss",
+            save_dir=logs_dir,
+        )
+    )
 
     trainer = pl.Trainer(
         callbacks=callbacks,
         logger=loggers,
         default_root_dir=logs_dir,
-        accelerator="cpu",
+        accelerator="gpu",
         max_epochs=10,
         val_check_interval=0.25,
     )
