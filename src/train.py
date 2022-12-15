@@ -45,9 +45,9 @@ class FaceAgeModule(pl.LightningModule):
     def forward(self, x: torch.Tensor):
         return self.net(x)
 
-    def predict(self, batch):
-        x, y = batch
+    def predict(self, x):
         preds = self.forward(x)
+        preds = preds.clip(0, 1)
         return preds
 
     def on_train_start(self):
@@ -60,10 +60,13 @@ class FaceAgeModule(pl.LightningModule):
         preds = self.forward(x)
         loss = self.criterion(preds, y)
 
+        preds = preds.clip(0, 1)
+
         # rescale prediction from [0-1] to [0-80]
         if self.hparams.rescale_labels_by:
             preds = preds * self.hparams.rescale_labels_by
             y = y * self.hparams.rescale_labels_by
+            preds = preds.clip(1, self.hparams.rescale_labels_by)
 
         return loss, preds, y
 
@@ -124,47 +127,51 @@ def main():
         batch_size=32,
     )
 
-    model = FaceAgeModule(rescale_labels_by=age_norm_value)
+    for i in range(5):
+        pl.seed_everything(i)
 
-    callbacks = []
-    loggers = []
+        model = FaceAgeModule(rescale_labels_by=age_norm_value)
 
-    callbacks.append(
-        pl.callbacks.ModelCheckpoint(
-            monitor="val/mae",
-            dirpath=logs_dir / "checkpoints",
-            save_top_k=1,
-            save_last=True,
-            mode="min",
-            save_weights_only=True,
-            filename="best-checkpoint",
+        callbacks = []
+        loggers = []
+
+        callbacks.append(
+            pl.callbacks.ModelCheckpoint(
+                monitor="val/mae",
+                dirpath=logs_dir / "checkpoints",
+                save_top_k=1,
+                save_last=True,
+                mode="min",
+                save_weights_only=True,
+                filename="best-checkpoint",
+            )
         )
-    )
 
-    loggers.append(
-        pl.loggers.WandbLogger(
-            project="face-age",
-            # name="100x100+convnet",
-            # name="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
-            name="224x224+EffNet+balanced-validation+oversampling-augmentation+cut500+clip80+label-norm+MSELoss",
-            save_dir=logs_dir,
+        loggers.append(
+            pl.loggers.WandbLogger(
+                project="face-age",
+                # name="100x100+convnet",
+                name="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
+                # name="224x224+EffNet+balanced-validation+oversampling-augmentation+cut500+clip80+label-norm+MSELoss",
+                save_dir=logs_dir,
+                group="224x224+EffNet+balanced-validation+cut500+clip80+label-norm+MSELoss",
+            )
         )
-    )
 
-    trainer = pl.Trainer(
-        callbacks=callbacks,
-        logger=loggers,
-        default_root_dir=logs_dir,
-        accelerator="gpu",
-        max_epochs=10,
-        val_check_interval=0.25,
-    )
+        trainer = pl.Trainer(
+            callbacks=callbacks,
+            logger=loggers,
+            default_root_dir=logs_dir,
+            accelerator="gpu",
+            max_epochs=10,
+            val_check_interval=0.1,
+        )
 
-    trainer.validate(model=model, datamodule=datamodule)
+        trainer.validate(model=model, datamodule=datamodule)
 
-    trainer.fit(model=model, datamodule=datamodule)
+        trainer.fit(model=model, datamodule=datamodule)
 
-    trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
+        trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
 
 
 if __name__ == "__main__":
