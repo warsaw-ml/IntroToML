@@ -30,14 +30,14 @@ st.caption("Click checkbox to start")
 run = st.checkbox("Run")
 FRAME_WINDOW = st.image([])
 camera = cv2.VideoCapture(0)
-
-model = Predict()
+SIZE = 0.2
 pred = {}
 # loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
 with mp_face_detection.FaceDetection(
     model_selection=0, min_detection_confidence=0.5
 ) as face_detection:
+    model = Predict()
     while run:
         st.empty()
         # capture image from the camera
@@ -51,6 +51,7 @@ with mp_face_detection.FaceDetection(
         image.flags.writeable = True
 
         if results.detections:
+            #print(results.detections)
             for detection in results.detections:
                 
                 relative_bounding_box = detection.location_data.relative_bounding_box
@@ -66,13 +67,34 @@ with mp_face_detection.FaceDetection(
                     image_cols,
                     image_rows
                 )
-                cropped_image = image[rect_start_point[1]:rect_end_point[1], rect_start_point[0]:rect_end_point[0]]
-                cv2.imwrite("image.jpg", cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR))
-                id = detection.label_id[0]
-                if id not in pred:
+                
+                if rect_start_point is not None and rect_end_point is not None:
+                    width = rect_end_point[0] - rect_start_point[0]
+                    height = rect_end_point[1] - rect_start_point[1]
+                    resized_width_params = (int(rect_start_point[0] - width * SIZE),
+                                             int(rect_end_point[0] + width * SIZE)
+                                            )
+                    
+                    resized_height_params = (int(rect_start_point[1] - height * SIZE),
+                                             int(rect_end_point[1] + height * SIZE)
+                                            )
+
+                    image_height, image_width, _ = image.shape
+                    resized_width_params = (max(0, resized_width_params[0]), min(image_width, resized_width_params[1]))
+                    resized_height_params = (max(0, resized_height_params[0]), min(image_height, resized_height_params[1]))
+                    
+                    cropped_image = image[resized_height_params[0]:resized_height_params[1],
+                                         resized_width_params[0]:resized_width_params[1]]
+                    
+                    
+                    cv2.imwrite("image.jpg", cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR))
+                    
                     face = Image.fromarray(cropped_image)
-                    pred[id] = model.predict(face)
-                    print(pred)
+                    face = face.convert("RGB")
+                    
+                    #TODO print model prediction 
+                    print(model.predict(face))
+                    
                 
                 
                 # <code>
