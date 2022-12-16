@@ -12,4 +12,5 @@ pyrootutils
 wandb
 opencv-python
 streamlit
-# mediapipe 
+streamlit-lottie
+mediapipe
