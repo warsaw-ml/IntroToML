@@ -9,3 +9,7 @@ Pillow
 efficientnet-pytorch
 timm
 pyrootutils
+wandb
+opencv-python
+streamlit
+# mediapipe 
