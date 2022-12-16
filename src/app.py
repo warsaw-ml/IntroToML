@@ -1,3 +1,6 @@
+import pyrootutils
+root = pyrootutils.setup_root(__file__, pythonpath=True, cwd=True)
+
 import cv2
 import mediapipe as mp
 import requests
@@ -6,7 +9,7 @@ from PIL import Image
 from streamlit_lottie import st_lottie
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 
-from run_model import Predict
+from src.predict import Predict
 
 
 mp_face_detection = mp.solutions.face_detection
@@ -30,7 +33,7 @@ st.caption("Click checkbox to start")
 run = st.checkbox("Run")
 FRAME_WINDOW = st.image([])
 camera = cv2.VideoCapture(0)
-SIZE = 0.2
+SIZE = 0.1
 pred = {}
 # loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
@@ -96,15 +99,11 @@ with mp_face_detection.FaceDetection(
                     face = Image.fromarray(cropped_image)
                     face = face.convert("RGB")
 
-                    #TODO print model prediction 
                     prediction = model.predict(face)
-                    image = cv2.putText(image, f"Age: {int(prediction)}", (rect_start_point[0], rect_start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
+                    print(prediction)
+                    image = cv2.putText(image, f"Age: {int(prediction)}", (rect_start_point[0], rect_start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
                     
                 
-                
-                # <code>
-                # machine learning things - model prediction for detection and printing age on the image
-                # </code>
                 mp_drawing.draw_detection(image, detection)
 
         # show the final image
