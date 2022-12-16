@@ -80,8 +80,12 @@ with mp_face_detection.FaceDetection(
                                             )
 
                     image_height, image_width, _ = image.shape
-                    resized_width_params = (max(0, resized_width_params[0]), min(image_width, resized_width_params[1]))
-                    resized_height_params = (max(0, resized_height_params[0]), min(image_height, resized_height_params[1]))
+                    resized_width_params = (max(0, resized_width_params[0]), 
+                                            min(image_width, resized_width_params[1])
+                                            )
+                    resized_height_params = (max(0, resized_height_params[0]),
+                                            min(image_height, resized_height_params[1])
+                                            )
                     
                     cropped_image = image[resized_height_params[0]:resized_height_params[1],
                                          resized_width_params[0]:resized_width_params[1]]
@@ -91,9 +95,10 @@ with mp_face_detection.FaceDetection(
                     
                     face = Image.fromarray(cropped_image)
                     face = face.convert("RGB")
-                    
+
                     #TODO print model prediction 
-                    print(model.predict(face))
+                    prediction = model.predict(face)
+                    image = cv2.putText(image, f"Age: {int(prediction)}", (rect_start_point[0], rect_start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
                     
                 
                 
