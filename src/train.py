@@ -1,6 +1,6 @@
 import pyrootutils
 
-root = pyrootutils.setup_root(__file__, pythonpath=True, cwd=True)
+root = pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
 
 from typing import Any, List
 
@@ -127,7 +127,7 @@ def main():
         batch_size=32,
     )
 
-    for i in range(0, 5):
+    for i in range(0, 1):
         pl.seed_everything(i)
 
         model = FaceAgeModule(rescale_labels_by=age_norm_value)
@@ -147,14 +147,14 @@ def main():
             )
         )
 
-        loggers.append(
-            pl.loggers.WandbLogger(
-                project="face-age",
-                save_dir=logs_dir,
-                name="224x224+EffNet-b0-+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
-                group="224x224+EffNet-b0+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
-            )
-        )
+        # loggers.append(
+        #     pl.loggers.WandbLogger(
+        #         project="face-age",
+        #         save_dir=logs_dir,
+        #         name="224x224+EffNet-b0-+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
+        #         group="224x224+EffNet-b0+balanced-val+cut500+clip80+label-norm+mirror-augment+MSELoss",
+        #     )
+        # )
 
         trainer = pl.Trainer(
             callbacks=callbacks,

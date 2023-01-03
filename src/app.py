@@ -1,6 +1,6 @@
 import pyrootutils
 
-root = pyrootutils.setup_root(__file__, pythonpath=True, cwd=True)
+root = pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
 
 import cv2
 import mediapipe as mp
@@ -37,9 +37,7 @@ SIZE = 0.1
 pred = {}
 # loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
-with mp_face_detection.FaceDetection(
-    model_selection=0, min_detection_confidence=0.5
-) as face_detection:
+with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5) as face_detection:
     model = Predict()
     while run:
         st.empty()
