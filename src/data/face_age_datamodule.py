@@ -8,6 +8,24 @@ from src.data.face_age_dataset_from_path import FaceAgeDatasetFromPath
 
 
 class FaceAgeDataModule(LightningDataModule):
+    """
+    LightningDataModule for our FaceAge dataset.
+
+    A DataModule implements 3 key methods:
+        def setup(self, stage):
+            # things to do on every process in DDP
+            # load data, set variables, etc...
+        def train_dataloader(self):
+            # return train dataloader
+        def val_dataloader(self):
+            # return validation dataloader
+        def test_dataloader(self):
+            # return test dataloader
+
+    This allows to share a full dataset without explaining how to download,
+    split, transform and process the data.
+    """
+
     def __init__(
         self,
         data_dir: str = "data/",
@@ -19,6 +37,8 @@ class FaceAgeDataModule(LightningDataModule):
     ):
         super().__init__()
 
+        # this line allows to access init params with 'self.hparams' attribute
+        # also ensures init params will be stored in ckpt
         self.save_hyperparameters()
 
         self.data_train: Optional[Dataset] = None
@@ -26,14 +46,15 @@ class FaceAgeDataModule(LightningDataModule):
         self.data_test: Optional[Dataset] = None
 
     def setup(self, stage: Optional[str] = None):
+        """
+        Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
+        """
         if not self.data_train and not self.data_val and not self.data_test:
 
             # image transformations
             transform_list = []
-
             transform_list.append(transforms.Resize(self.hparams.img_size))
             transform_list.append(transforms.RandomHorizontalFlip(p=0.5))
-
             transform = transforms.Compose(transform_list)
 
             self.data_train = FaceAgeDatasetFromPath(

@@ -4,7 +4,16 @@ from src.models.face_age_module import FaceAgeModule
 
 
 class Predict:
+    """
+    This class is used for loading the trained face age model and making predictions on a given image.
+    """
+
     def __init__(self):
+        """
+        Initializes the Predict class by loading the trained model, setting it to evaluation mode, and freezing its parameters.
+        Also creates the image preprocessing pipeline using the torchvision library.
+        """
+
         self.model = FaceAgeModule.load_from_checkpoint("models/best-checkpoint.ckpt")
         self.model.eval()
         self.model.freeze()
@@ -17,6 +26,13 @@ class Predict:
         self.transform = transforms.Compose(transform_list)
 
     def predict(self, image) -> float:
+        """
+        Predict the age of a face in an image using a pre-trained model.
+        Args:
+            image (image): An image of a face.
+        Returns:
+            float: The predicted age of the face in the image.
+        """
         img = self.transform(image)
         img = img.reshape(1, 3, 224, 224)
         prediction = self.model.forward(img)
