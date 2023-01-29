@@ -21,6 +21,8 @@ class FaceAgeModule(pl.LightningModule):
             self.net = models.SimpleConvNet_224x224()
         elif net == "EffNet_224x224":
             self.net = models.PretrainedEfficientNet()
+        else:
+            raise ValueError(f"Unknown net: {net}")
 
         # loss function
         self.criterion = torch.nn.MSELoss()
@@ -78,9 +80,6 @@ class FaceAgeModule(pl.LightningModule):
 
         return {"loss": loss}
 
-    def training_epoch_end(self, outputs: List[Any]):
-        pass
-
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
@@ -100,9 +99,6 @@ class FaceAgeModule(pl.LightningModule):
         self.test_mae(preds, targets)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/mae", self.test_mae, on_step=False, on_epoch=True, prog_bar=True)
-
-    def test_epoch_end(self, outputs: List[Any]):
-        pass
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=0.01)
