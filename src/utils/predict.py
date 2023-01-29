@@ -1,6 +1,6 @@
 from torchvision import transforms
 
-from src.train import FaceAgeModule
+from src.models.face_age_module import FaceAgeModule
 
 
 class Predict:

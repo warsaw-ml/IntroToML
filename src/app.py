@@ -1,7 +1,4 @@
 import pyrootutils
-
-root = pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
-
 import cv2
 import mediapipe as mp
 import requests
@@ -10,7 +7,10 @@ from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordi
 from PIL import Image
 from streamlit_lottie import st_lottie
 
-from src.predict import Predict
+root = pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+from src.utils.predict import Predict
+
 
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
