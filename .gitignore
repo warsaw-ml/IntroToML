@@ -153,3 +153,4 @@ logs/
 checkpoints/
 lightning_logs/
 image.jpg
+combined_images/

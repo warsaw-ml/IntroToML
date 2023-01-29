@@ -10,7 +10,7 @@ from src.models import models
 class FaceAgeModule(pl.LightningModule):
     """
     FaceAgeModule is a PyTorch Lightning module for training a model to predict the age of a face in an image.
-    It uses a pre-trained model (either SimpleConvNet_100x100, SimpleConvNet_224x224, PretrainedResnetVGGFace2, or PretrainedEfficientNet)
+    It uses a pre-trained model (either SimpleConvNet_100x100, SimpleConvNet_224x224, or PretrainedEfficientNet)
     and fine-tunes it on the input dataset. The module has several methods for training, validation, and testing,
     as well as for logging metrics such as mean absolute error (MAE) and loss.
     """
@@ -18,7 +18,7 @@ class FaceAgeModule(pl.LightningModule):
     def __init__(self, net: str = "EffNet_224x224", rescale_age_by: int = 80.0):
         """
         Initializes the FaceAgeModule with the specified rescale value for the labels.
-        The rescale value is used to convert the predicted age value from a range of [0,1] to [0, rescale_labels_by].
+        The rescale value is used to convert the predicted age value from a range of [0,1] to [0, rescale_age_by].
         """
         super().__init__()
 
@@ -39,7 +39,7 @@ class FaceAgeModule(pl.LightningModule):
         self.criterion = torch.nn.MSELoss()
         # self.criterion = torch.nn.SmoothL1Loss()
 
-        # metric objects for calculating and averaging maeuracy across batches
+        # metric objects for calculating and averaging MAE across batches
         self.train_mae = MAE()
         self.val_mae = MAE()
         self.test_mae = MAE()

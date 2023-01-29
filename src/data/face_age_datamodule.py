@@ -11,7 +11,7 @@ class FaceAgeDataModule(LightningDataModule):
     """
     LightningDataModule for our FaceAge dataset.
 
-    A DataModule implements 3 key methods:
+    A DataModule implements 4 key methods:
         def setup(self, stage):
             # things to do on every process in DDP
             # load data, set variables, etc...

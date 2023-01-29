@@ -46,3 +46,5 @@ python src/train.py
 ```
 
 The default architecture is custom CNN with img (input) size 100x100. 10 epochs should train on CPU for about 10-30 minutes depending on your hardware.
+
+You can change the architecture in `src/train.py` file.
