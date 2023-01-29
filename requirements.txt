@@ -1,16 +1,27 @@
+# pytorch related
+torch
+torchvision
+pytorch-lightning
+torchmetrics
+efficientnet-pytorch
+
+# data processing
 pandas
 seaborn
-torch>=1.12.0
-torchvision
-pytorch-lightning>=1.7.0
-torchmetrics
 tqdm
-Pillow
-efficientnet-pytorch
-timm
-pyrootutils
-wandb
+ipykernel
+
+# face detection
+mediapipe
 opencv-python
+Pillow
+
+# app
 streamlit
 streamlit-lottie
-mediapipe
+
+# root setup
+pyrootutils
+
+# logging
+wandb

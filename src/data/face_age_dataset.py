@@ -17,8 +17,8 @@ class FaceAgeDataset(Dataset):
         transform=None,
     ):
         self.data_dir = Path(data_dir)
-        self.dataset_dir = self.data_dir / "UTKFace"
-        self.img_dir = self.dataset_dir / "images"
+        self.dataset_dir = self.data_dir / "archive/UTKFace"
+        self.img_dir = self.dataset_dir
 
         self.img_size = img_size
         self.label_clipping = label_clipping

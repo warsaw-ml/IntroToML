@@ -152,3 +152,4 @@ logs/
 .DS_Store
 checkpoints/
 lightning_logs/
+image.jpg

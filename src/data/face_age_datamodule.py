@@ -11,6 +11,7 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
+        img_size: tuple = (224, 224),
         normalize_age_by: int = 80,
         batch_size: int = 32,
         num_workers: int = 0,
@@ -27,9 +28,12 @@ class FaceAgeDataModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         if not self.data_train and not self.data_val and not self.data_test:
 
-            # always apply random horizontal flip because why not
+            # image transformations
             transform_list = []
+
+            transform_list.append(transforms.Resize(self.hparams.img_size))
             transform_list.append(transforms.RandomHorizontalFlip(p=0.5))
+
             transform = transforms.Compose(transform_list)
 
             self.data_train = FaceAgeDatasetFromPath(
@@ -40,10 +44,12 @@ class FaceAgeDataModule(LightningDataModule):
             self.data_val = FaceAgeDatasetFromPath(
                 img_dir="data/face_age_dataset/val",
                 normalize_age_by=self.hparams.normalize_age_by,
+                transform=transform,
             )
             self.data_test = FaceAgeDatasetFromPath(
                 img_dir="data/face_age_dataset/test",
                 normalize_age_by=self.hparams.normalize_age_by,
+                transform=transform,
             )
 
     def train_dataloader(self):
