@@ -17,6 +17,8 @@ pip install -r requirements.txt
 
 ## Run webcam app
 
+(you don't need to train anything to run the app because it uses saved model)
+
 ```
 streamlit run src/app.py
 ```
@@ -26,9 +28,16 @@ streamlit run src/app.py
 First download dataset from: <br>
 https://www.kaggle.com/datasets/jangedoo/utkface-new
 
-Unpack the data to `data/` folder.
+Unpack the data to `data/` folder. Your folder structure should look like this:
 
-Next you should process dataset by running `notebooks/data_generation.ipynb`
+```
+data
+├── archive
+│   ├── UTKFace
+│   ├── ...
+```
+
+Next you should process dataset by running `notebooks/data_generation.ipynb`. This can take about 5-20 minutes depending on your hardware. The output weights around 25GB and will be saved to `data/face_age_dataset/` folder.
 
 Now you can run training:
 

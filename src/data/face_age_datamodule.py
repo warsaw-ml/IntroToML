@@ -11,7 +11,7 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        img_size: tuple = (100, 100),
+        img_size: tuple = (224, 224),
         normalize_age_by: int = 80,
         batch_size: int = 32,
         num_workers: int = 0,

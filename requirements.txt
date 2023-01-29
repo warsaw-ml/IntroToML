@@ -9,6 +9,7 @@ efficientnet-pytorch
 pandas
 seaborn
 tqdm
+ipykernel
 
 # face detection
 mediapipe
