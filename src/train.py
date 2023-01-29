@@ -6,7 +6,6 @@ root = pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=Tr
 
 from src.data.face_age_datamodule import FaceAgeDataModule
 from src.models.face_age_module import FaceAgeModule
-from src.models import models
 
 
 def main():
@@ -18,13 +17,13 @@ def main():
     use_wandb = False
     age_norm_value = 80
 
-    net = models.SimpleConvNet_100x100()
+    net = "SimpleConvNet_100x100"
     img_size = (100, 100)
 
-    # net = models.SimpleConvNet_224x224()
+    # net = "SimpleConvNet_224x224"
     # img_size = (224, 224)
 
-    # net = models.PretrainedEfficientNet()
+    # net = "EffNet_224x224"
     # img_size = (224, 224)
 
     datamodule = FaceAgeDataModule(

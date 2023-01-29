@@ -4,17 +4,23 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
+from src.models import models
 
 
 class FaceAgeModule(pl.LightningModule):
-    def __init__(self, net: torch.nn, rescale_age_by: int = 1.0):
+    def __init__(self, net: str = "EffNet_224x224", rescale_age_by: int = 80.0):
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         self.save_hyperparameters()
 
-        # backbone of the model
-        self.net = net
+        # architecture
+        if net == "SimpleConvNet_100x100":
+            self.net = models.SimpleConvNet_100x100()
+        elif net == "SimpleConvNet_224x224":
+            self.net = models.SimpleConvNet_224x224()
+        elif net == "EffNet_224x224":
+            self.net = models.PretrainedEfficientNet()
 
         # loss function
         self.criterion = torch.nn.MSELoss()
