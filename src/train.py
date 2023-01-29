@@ -9,6 +9,12 @@ from src.models.face_age_module import FaceAgeModule
 
 
 def main():
+    """
+    The main function is the entry point of the program. It sets up the data and model,
+    creates callbacks and loggers, and then runs the training, validation, and testing process using the
+    Pytorch Lightning Trainer.
+    """
+
     pl.seed_everything(42)
 
     data_dir = root / "data"

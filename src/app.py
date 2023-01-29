@@ -35,12 +35,17 @@ FRAME_WINDOW = st.image([])
 camera = cv2.VideoCapture(0)
 SIZE = 0.1
 pred = {}
+
 # loading the animation
 lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
+
 with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5) as face_detection:
     model = Predict()
+
+    # run the prediction loop
     while run:
         st.empty()
+
         # capture image from the camera
         _, frame = camera.read()
         image_rows, image_cols, _ = frame.shape
@@ -116,6 +121,7 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
 
         # show the final image
         FRAME_WINDOW.image(image)
+
     else:
         # if app is not working - display screensaver
         st_lottie(lottie_coding, height=400)
