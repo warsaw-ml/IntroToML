@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ## Run webcam app
 
-(you don't need to train anything to run the app because it uses saved model)
+(you don't need to train anything to run the app because it uses saved model from `models/best-checkpoint.ckpt`)
 
 ```
 streamlit run src/app.py
@@ -47,7 +47,7 @@ python src/train.py
 
 The default architecture is custom CNN with img (input) size 100x100. 10 epochs should train on CPU for about 10-30 minutes depending on your hardware.
 
-You can change the architecture in `src/train.py` file.
+You can change the architecture and hyperparameters in `src/train.py` file.
 
 ## Project structure
 
@@ -56,6 +56,9 @@ You can change the architecture in `src/train.py` file.
 ├── data
 │   ├── archive <- raw dataset downloaded from kaggle
 │   └── face_age_dataset <- processed dataset generated after running `notebooks/02_data_generation.ipynb`
+│
+├── logs <- this folder will be generated when running training, contains model checkpoints and logs
+│   └── ...
 │
 ├── models
 │   └── best-checkpoint.ckpt <- default checkpoint used by the app
@@ -77,14 +80,14 @@ You can change the architecture in `src/train.py` file.
     │   └── face_age_dataset.py <- pytorch dataset
     │
     ├── models
-    │   └── face_age_module.py <- pytorch lightning module for train/val/test loop
+    │   └── face_age_module.py <- pytorch lightning module encapsulating train/val/test loop
     │   └── architectures.py <- model architectures
     │
     ├── utils
     │   ├── functions.py <- app utilites
-    │   ├── face_recognition.py <- face recognition module
-    │   └── predict.py <- prediction module
+    │   ├── face_recognition.py <- app face recognition module
+    │   └── predict.py <- app prediction module
     │
-    ├── app.py <- run app
+    ├── app.py <- run streamlit app
     └── train.py <- run training
 ```
