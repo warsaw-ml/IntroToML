@@ -86,7 +86,8 @@ def main():
 
     # trainer setup
     trainer = pl.Trainer(
-        accelerator="gpu",
+        accelerator="cpu",
+        # accelerator="gpu",
         default_root_dir=log_dir,
         callbacks=callbacks,
         logger=loggers,
