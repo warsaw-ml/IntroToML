@@ -67,6 +67,8 @@ class FaceAgeDataModule(LightningDataModule):
 
             if self.hparams.imagenet_normalization:
                 transform_list.append(transforms.Normalize(self.imagenet_mean, self.imagenet_std))
+            else:
+                transform_list.append(transforms.Normalize(0, 1))
 
             transform = transforms.Compose(transform_list)
 

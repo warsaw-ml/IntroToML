@@ -37,7 +37,7 @@ data
 │   ├── ...
 ```
 
-Next you should process dataset by running `notebooks/data_generation.ipynb`. This can take about 5-20 minutes depending on your hardware. The output weights around 25GB and will be saved to `data/face_age_dataset/` folder.
+Next you should process dataset by running `notebooks/data_generation.ipynb`. This can take about 5-20 minutes depending on your hardware. The output weights around 7GB and will be saved to `data/face_age_dataset/` folder.
 
 Now you can run training:
 
@@ -67,8 +67,8 @@ You can change the architecture and hyperparameters in `src/train.py` file.
 │   ├── 01_data_exploration.ipynb
 │   ├── 02_data_generation.ipynb
 │   ├── 03_predictions_analysis.ipynb
-│   ├── 04_case_study1.ipynb
-│   └── 05_case_study2.ipynb
+│   ├── 04_running_many_seeds.ipynb
+│   └── 05_case_study_augmentation.ipynb
 │
 ├── README.md
 │
