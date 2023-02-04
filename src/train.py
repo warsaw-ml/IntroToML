@@ -18,8 +18,9 @@ def main():
     """
 
     # set seed for reproducibility
-    pl.seed_everything(2)
+    pl.seed_everything(42)
 
+    # paths
     data_dir = root / "data"
     log_dir = root / "logs" / time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
 
