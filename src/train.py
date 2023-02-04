@@ -1,3 +1,4 @@
+import time
 import pyrootutils
 import pytorch_lightning as pl
 import wandb
@@ -20,10 +21,15 @@ def main():
     pl.seed_everything(2)
 
     data_dir = root / "data"
-    log_dir = root / "logs"
+    log_dir = root / "logs" / time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
 
-    use_wandb = False
+    # some hyperparameters
+    max_epochs = 10
+    accelerator = "cpu"  # or "gpu"
     age_norm_value = 80
+    use_augmented_dataset = False
+    loss_fn = "MSELoss"  # or "SmoothL1Loss"
+    use_wandb = False
 
     # choose one of the architectures by uncommenting the set of corresponding hyperparameters below
 
@@ -49,13 +55,18 @@ def main():
         data_dir=data_dir,
         img_size=img_size,
         imagenet_normalization=imagenet_normalization,
+        use_augmented_dataset=use_augmented_dataset,
         normalize_age_by=age_norm_value,
         num_workers=0,
         batch_size=32,
         pin_memory=False,
     )
 
-    model = FaceAgeModule(net=net, rescale_age_by=age_norm_value)
+    model = FaceAgeModule(
+        net=net,
+        rescale_age_by=age_norm_value,
+        loss_fn=loss_fn,
+    )
 
     callbacks = []
     loggers = []
@@ -84,18 +95,17 @@ def main():
             )
         )
 
-    # trainer setup
+    # training options
     trainer = pl.Trainer(
-        accelerator="cpu",
-        # accelerator="gpu",
+        accelerator=accelerator,
         default_root_dir=log_dir,
         callbacks=callbacks,
         logger=loggers,
-        max_epochs=10,
-        # val_check_interval=0.1,  # frequency of validation epoch
+        max_epochs=max_epochs,
+        # val_check_interval=0.2,  # frequency of validation epoch per training epoch
     )
 
-    # optiomally validate before training
+    # optionally validate before training
     # trainer.validate(model=model, datamodule=datamodule)
 
     # train

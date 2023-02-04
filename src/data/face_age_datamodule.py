@@ -4,7 +4,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from data.face_age_dataset import FaceAgeDataset
+from src.data.face_age_dataset import FaceAgeDataset
 
 
 class FaceAgeDataModule(LightningDataModule):
@@ -29,8 +29,9 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        img_size: tuple = (224, 224),
+        img_size: tuple = (100, 100),
         imagenet_normalization: bool = False,
+        use_augmented_dataset: bool = False,
         normalize_age_by: int = 80,
         batch_size: int = 32,
         num_workers: int = 0,
@@ -69,9 +70,13 @@ class FaceAgeDataModule(LightningDataModule):
 
             transform = transforms.Compose(transform_list)
 
+            if self.hparams.use_augmented_dataset:
+                img_dir_train = "data/face_age_dataset/train_augmented"
+            else:
+                img_dir_train = "data/face_age_dataset/train"
+
             self.data_train = FaceAgeDataset(
-                img_dir="data/face_age_dataset/train",
-                # img_dir="data/face_age_dataset/train_augmented", # uncomment to use augmented dataset
+                img_dir=img_dir_train,
                 normalize_age_by=self.hparams.normalize_age_by,
                 transform=transform,
             )

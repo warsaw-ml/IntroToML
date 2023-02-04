@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
-from models import architectures
+from src.models import architectures
 
 
 class FaceAgeModule(pl.LightningModule):
@@ -15,10 +15,15 @@ class FaceAgeModule(pl.LightningModule):
     as well as for logging metrics such as mean absolute error (MAE) and loss.
     """
 
-    def __init__(self, net: str = "EffNet_224x224", rescale_age_by: int = 80.0):
+    def __init__(
+        self,
+        net: str = "EffNet_224x224",
+        rescale_age_by: int = 80.0,
+        loss_fn: str = "MSELoss",
+    ):
         """
         Initializes the FaceAgeModule with the specified rescale value for the labels.
-        The rescale value is used to convert the predicted age value from a range of [0,1] to [0, rescale_age_by].
+        The rescale value is used to convert the predicted age value from a range of [0,1] to [1, rescale_age_by].
         """
         super().__init__()
 
@@ -36,8 +41,12 @@ class FaceAgeModule(pl.LightningModule):
             raise ValueError(f"Unknown net: {net}")
 
         # loss function
-        self.criterion = torch.nn.MSELoss()
-        # self.criterion = torch.nn.SmoothL1Loss()
+        if loss_fn == "MSELoss":
+            self.criterion = torch.nn.MSELoss()
+        elif loss_fn == "SmoothL1Loss":
+            self.criterion = torch.nn.SmoothL1Loss()
+        else:
+            raise ValueError(f"Unknown loss functions: {loss_fn}")
 
         # metric objects for calculating and averaging MAE across batches
         self.train_mae = MAE()
