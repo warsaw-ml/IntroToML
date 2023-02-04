@@ -17,7 +17,7 @@ def main():
     """
 
     # set seed for reproducibility
-    pl.seed_everything(42)
+    pl.seed_everything(2)
 
     data_dir = root / "data"
     log_dir = root / "logs"

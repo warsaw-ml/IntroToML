@@ -74,6 +74,12 @@ You can change the architecture and hyperparameters in `src/train.py` file.
 │
 ├── requirements.txt <- python dependencies
 │
+├── .gitignore <- list of files to ignore by git
+│
+├── .pre-commit-config.yaml <- hooks for autoformatting code
+│
+├── .project-root <- file used to detect project root folder
+│
 └── src
     ├── data
     │   ├── face_age_datamodule.py <- pytorch lightning datamodule encapsulating pytorch dataset
