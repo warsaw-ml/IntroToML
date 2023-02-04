@@ -103,6 +103,7 @@ def main():
         callbacks=callbacks,
         logger=loggers,
         max_epochs=max_epochs,
+        # gradient_clip_val=0.5,
         # val_check_interval=0.2,  # frequency of validation epoch per training epoch
     )
 
