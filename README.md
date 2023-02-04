@@ -48,3 +48,43 @@ python src/train.py
 The default architecture is custom CNN with img (input) size 100x100. 10 epochs should train on CPU for about 10-30 minutes depending on your hardware.
 
 You can change the architecture in `src/train.py` file.
+
+## Project structure
+
+```
+.
+├── data
+│   ├── archive <- raw dataset downloaded from kaggle
+│   └── face_age_dataset <- processed dataset generated after running `notebooks/02_data_generation.ipynb`
+│
+├── models
+│   └── best-checkpoint.ckpt <- default checkpoint used by the app
+│
+├── notebooks
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_data_generation.ipynb
+│   ├── 03_predictions_analysis.ipynb
+│   ├── 04_case_study1.ipynb
+│   └── 05_case_study2.ipynb
+│
+├── README.md
+│
+├── requirements.txt <- python dependencies
+│
+└── src
+    ├── data
+    │   ├── face_age_datamodule.py <- pytorch lightning datamodule encapsulating pytorch dataset
+    │   └── face_age_dataset.py <- pytorch dataset
+    │
+    ├── models
+    │   └── face_age_module.py <- pytorch lightning module for train/val/test loop
+    │   └── architectures.py <- model architectures
+    │
+    ├── utils
+    │   ├── functions.py <- app utilites
+    │   ├── face_recognition.py <- face recognition module
+    │   └── predict.py <- prediction module
+    │
+    ├── app.py <- run app
+    └── train.py <- run training
+```
