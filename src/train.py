@@ -16,29 +16,34 @@ def main():
     Pytorch Lightning Trainer.
     """
 
+    # set seed for reproducibility
     pl.seed_everything(42)
 
     data_dir = root / "data"
     log_dir = root / "logs"
 
-    # use_wandb = False
-    use_wandb = True
+    use_wandb = False
     age_norm_value = 80
 
-    # net = "SimpleConvNet_100x100"
-    # img_size = (100, 100)
-    # imagenet_normalization = False
-    # exp_name = f"SimpleConvNet+{img_size}"
+    # choose one of the architectures by uncommenting the set of corresponding hyperparameters below
 
+    # 1
+    net = "SimpleConvNet_100x100"
+    img_size = (100, 100)
+    imagenet_normalization = False
+    exp_name = f"SimpleConvNet+{img_size}"
+
+    # 2
     # net = "SimpleConvNet_224x224"
     # img_size = (224, 224)
     # imagenet_normalization = False
     # exp_name = f"SimpleConvNet+{img_size}"
 
-    net = "EffNet_224x224"
-    img_size = (224, 224)
-    imagenet_normalization = True
-    exp_name = f"EffNet+{img_size}"
+    # 3
+    # net = "EffNet_224x224"
+    # img_size = (224, 224)
+    # imagenet_normalization = True
+    # exp_name = f"EffNet+{img_size}"
 
     datamodule = FaceAgeDataModule(
         data_dir=data_dir,
