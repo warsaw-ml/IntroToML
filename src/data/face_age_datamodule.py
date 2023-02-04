@@ -71,6 +71,7 @@ class FaceAgeDataModule(LightningDataModule):
 
             self.data_train = FaceAgeDataset(
                 img_dir="data/face_age_dataset/train",
+                # img_dir="data/face_age_dataset/train_augmented", # uncomment to use augmented dataset
                 normalize_age_by=self.hparams.normalize_age_by,
                 transform=transform,
             )

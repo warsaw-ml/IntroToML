@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
-from src.models import models
+from models import architectures
 
 
 class FaceAgeModule(pl.LightningModule):
@@ -27,11 +27,11 @@ class FaceAgeModule(pl.LightningModule):
 
         # architecture
         if net == "SimpleConvNet_100x100":
-            self.net = models.SimpleConvNet_100x100()
+            self.net = architectures.SimpleConvNet_100x100()
         elif net == "SimpleConvNet_224x224":
-            self.net = models.SimpleConvNet_224x224()
+            self.net = architectures.SimpleConvNet_224x224()
         elif net == "EffNet_224x224":
-            self.net = models.PretrainedEfficientNet()
+            self.net = architectures.PretrainedEfficientNet()
         else:
             raise ValueError(f"Unknown net: {net}")
 
