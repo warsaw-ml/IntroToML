@@ -88,11 +88,10 @@ class FaceAgeModule(pl.LightningModule):
         # clip prediction to [0-1]
         preds = preds.clip(0, 1)
 
-        # rescale prediction from [0-1] to [0-80]
+        # rescale prediction from [0-1] to [1-80]
         if self.hparams.rescale_age_by:
             preds = preds * self.hparams.rescale_age_by
-            y = y * self.hparams.rescale_age_by
-            preds = preds.clip(1, self.hparams.rescale_age_by)
+            y = y * (self.hparams.rescale_age_by - 1) + 1  # y = y*79 + 1
 
         return loss, preds, y
 
