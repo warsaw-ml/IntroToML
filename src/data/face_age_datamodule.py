@@ -4,7 +4,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from src.data.face_age_dataset_from_path import FaceAgeDatasetFromPath
+from src.data.face_age_dataset import FaceAgeDataset
 
 
 class FaceAgeDataModule(LightningDataModule):
@@ -29,7 +29,9 @@ class FaceAgeDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        img_size: tuple = (224, 224),
+        img_size: tuple = (100, 100),
+        imagenet_normalization: bool = False,
+        use_augmented_dataset: bool = False,
         normalize_age_by: int = 80,
         batch_size: int = 32,
         num_workers: int = 0,
@@ -41,6 +43,11 @@ class FaceAgeDataModule(LightningDataModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters()
 
+        # imagenet normalization values (for models pretrained on imagenet)
+        self.imagenet_mean = (0.485, 0.456, 0.406)
+        self.imagenet_std = (0.229, 0.224, 0.225)
+
+        # datasets
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -51,23 +58,36 @@ class FaceAgeDataModule(LightningDataModule):
         """
         if not self.data_train and not self.data_val and not self.data_test:
 
-            # image transformations
+            # image transformations executed during training
             transform_list = []
             transform_list.append(transforms.Resize(self.hparams.img_size))
+
+            # always apply horizontal flip because why not
             transform_list.append(transforms.RandomHorizontalFlip(p=0.5))
+
+            if self.hparams.imagenet_normalization:
+                transform_list.append(transforms.Normalize(self.imagenet_mean, self.imagenet_std))
+            else:
+                transform_list.append(transforms.Normalize(0, 1))
+
             transform = transforms.Compose(transform_list)
 
-            self.data_train = FaceAgeDatasetFromPath(
-                img_dir="data/face_age_dataset/train",
+            if self.hparams.use_augmented_dataset:
+                img_dir_train = "data/face_age_dataset/train_augmented"
+            else:
+                img_dir_train = "data/face_age_dataset/train"
+
+            self.data_train = FaceAgeDataset(
+                img_dir=img_dir_train,
                 normalize_age_by=self.hparams.normalize_age_by,
                 transform=transform,
             )
-            self.data_val = FaceAgeDatasetFromPath(
+            self.data_val = FaceAgeDataset(
                 img_dir="data/face_age_dataset/val",
                 normalize_age_by=self.hparams.normalize_age_by,
                 transform=transform,
             )
-            self.data_test = FaceAgeDatasetFromPath(
+            self.data_test = FaceAgeDataset(
                 img_dir="data/face_age_dataset/test",
                 normalize_age_by=self.hparams.normalize_age_by,
                 transform=transform,

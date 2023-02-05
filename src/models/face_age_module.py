@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import MeanAbsoluteError as MAE
 from torchmetrics import MeanMetric, MinMetric
-from src.models import models
+from src.models import architectures
 
 
 class FaceAgeModule(pl.LightningModule):
@@ -15,10 +15,15 @@ class FaceAgeModule(pl.LightningModule):
     as well as for logging metrics such as mean absolute error (MAE) and loss.
     """
 
-    def __init__(self, net: str = "EffNet_224x224", rescale_age_by: int = 80.0):
+    def __init__(
+        self,
+        net: str = "EffNet_224x224",
+        rescale_age_by: int = 80.0,
+        loss_fn: str = "MSELoss",
+    ):
         """
         Initializes the FaceAgeModule with the specified rescale value for the labels.
-        The rescale value is used to convert the predicted age value from a range of [0,1] to [0, rescale_age_by].
+        The rescale value is used to convert the predicted age value from a range of [0,1] to [1, rescale_age_by].
         """
         super().__init__()
 
@@ -27,17 +32,21 @@ class FaceAgeModule(pl.LightningModule):
 
         # architecture
         if net == "SimpleConvNet_100x100":
-            self.net = models.SimpleConvNet_100x100()
+            self.net = architectures.SimpleConvNet_100x100()
         elif net == "SimpleConvNet_224x224":
-            self.net = models.SimpleConvNet_224x224()
+            self.net = architectures.SimpleConvNet_224x224()
         elif net == "EffNet_224x224":
-            self.net = models.PretrainedEfficientNet()
+            self.net = architectures.PretrainedEfficientNet()
         else:
             raise ValueError(f"Unknown net: {net}")
 
         # loss function
-        self.criterion = torch.nn.MSELoss()
-        # self.criterion = torch.nn.SmoothL1Loss()
+        if loss_fn == "MSELoss":
+            self.criterion = torch.nn.MSELoss()
+        elif loss_fn == "SmoothL1Loss":
+            self.criterion = torch.nn.SmoothL1Loss()
+        else:
+            raise ValueError(f"Unknown loss functions: {loss_fn}")
 
         # metric objects for calculating and averaging MAE across batches
         self.train_mae = MAE()
@@ -88,11 +97,10 @@ class FaceAgeModule(pl.LightningModule):
         # clip prediction to [0-1]
         preds = preds.clip(0, 1)
 
-        # rescale prediction from [0-1] to [0-80]
+        # rescale prediction from [0-1] to [1-80]
         if self.hparams.rescale_age_by:
             preds = preds * self.hparams.rescale_age_by
-            y = y * self.hparams.rescale_age_by
-            preds = preds.clip(1, self.hparams.rescale_age_by)
+            y = y * (self.hparams.rescale_age_by - 1) + 1  # y = y*79 + 1
 
         return loss, preds, y
 

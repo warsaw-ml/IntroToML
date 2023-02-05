@@ -2,6 +2,8 @@ from torchvision import transforms
 
 from src.models.face_age_module import FaceAgeModule
 
+from pathlib import Path
+
 
 class Predict:
     """
@@ -14,7 +16,10 @@ class Predict:
         Also creates the image preprocessing pipeline using the torchvision library.
         """
 
-        self.model = FaceAgeModule.load_from_checkpoint("models/best-checkpoint.ckpt")
+        ckpt_path = Path("models/best-checkpoint.ckpt")
+        assert ckpt_path.exists(), f"Model checkpoint not found at: '{ckpt_path}'"
+
+        self.model = FaceAgeModule.load_from_checkpoint(ckpt_path)
         self.model.eval()
         self.model.freeze()
         transform_list = [
